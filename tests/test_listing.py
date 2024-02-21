@@ -5,6 +5,7 @@ from app.database import drop_all_tables, create_all_tables, SessionLocal
 from app.models import User, Listing
 from datetime import datetime, timezone
 from app.utils.password_operator import get_password_hash
+import asyncio
 
 
 client = TestClient(app)
@@ -32,49 +33,51 @@ test_listing = {
 }
 
 
-def initial_user_table():
+async def initial_user_table():
     db = SessionLocal()
-    new_user = User(
-        id=test_user["id"],
-        userName=test_user["userName"],
-        fullName=test_user["fullName"],
-        email=test_user["email"],
-        hashedPassword=test_user["hashedPassword"],
-        dob=test_user["dob"],
-        gender=test_user["gender"],
-        createdAt=test_user["createdAt"],
-        updatedAt=test_user["updatedAt"]
-    )
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
-    db.close()
+    async with db as async_session:
+        new_user = User(
+            id=test_user["id"],
+            userName=test_user["userName"],
+            fullName=test_user["fullName"],
+            email=test_user["email"],
+            hashedPassword=test_user["hashedPassword"],
+            dob=test_user["dob"],
+            gender=test_user["gender"],
+            createdAt=test_user["createdAt"],
+            updatedAt=test_user["updatedAt"]
+        )
+        async_session.add(new_user)
+        await async_session.commit()
+        await async_session.refresh(new_user)
 
 
-def initial_listing_table():
+async def initial_listing_table():
     db = SessionLocal()
-    new_listing = Listing(
-        id=test_listing["id"],
-        type=test_listing["type"],
-        availableNow=test_listing["availableNow"],
-        ownerId=test_listing["ownerId"],
-        address=test_listing["address"],
-        createdAt=test_listing["createdAt"],
-        updatedAt=test_listing["updatedAt"]
-    )
-    db.add(new_listing)
-    await db.commit()
-    await db.refresh(new_listing)
-    db.close()
+    async with db as async_session:
+        new_listing = Listing(
+            id=test_listing["id"],
+            type=test_listing["type"],
+            availableNow=test_listing["availableNow"],
+            ownerId=test_listing["ownerId"],
+            address=test_listing["address"],
+            createdAt=test_listing["createdAt"],
+            updatedAt=test_listing["updatedAt"]
+        )
+        async_session.add(new_listing)
+        await async_session.commit()
+        await async_session.refresh(new_listing)
 
 
-# Drop users and listings tables
-drop_all_tables()
-create_all_tables()
+@pytest.fixture(scope="session", autouse=True)
+async def setup_database():
+    # empty database
+    await drop_all_tables()
+    await create_all_tables()
 
-# add new user and listing
-initial_user_table()
-initial_listing_table()
+    # add new user and listing
+    await initial_user_table()
+    await initial_listing_table()
 
 
 def get_token():
@@ -87,6 +90,21 @@ def get_token():
     token_info = response.json()
     token = token_info["token"]
     return token
+
+
+# 1. test login
+@pytest.mark.asyncio
+def test_login_user():
+    response = client.post(
+        url="/user/token",
+        json={
+            "userName": test_user["userName"],
+            "password": "1234@Fateme"
+        })
+    assert response.status_code == 200
+
+    token_info = response.json()
+    assert token_info["token"] is str
 
 
 # 1. test get all

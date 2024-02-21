@@ -2,7 +2,6 @@ from app.database import SessionLocal
 from app.models import User
 from app.data.fake_users import FAKE_USERS
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def initialize_fake_users():
@@ -12,7 +11,6 @@ async def initialize_fake_users():
         # Check if username already exists
         existing_user = (await db.execute(select(User).where(User.userName == user_data["userName"]))).first()
         if existing_user is None:
-            # async with AsyncSession(db) as async_session:
             async with db as async_session:
                 new_user = User(
                     userName=user_data["userName"],

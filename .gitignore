@@ -19,6 +19,7 @@ site_build
 venv
 docs.zip
 archive.zip
+env
 
 # vim temporary files
 *~
@@ -29,5 +30,8 @@ archive.zip
 .DS_Store
 
 
+.pytest_cache/
 todo.txt
 errors.log
+request_logger.log
+count.txt

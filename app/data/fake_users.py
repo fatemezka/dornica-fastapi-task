@@ -12,20 +12,20 @@ FAKE_USERS = [
         "updatedAt": datetime.now(timezone.utc)
     },
     {
-        "userName": "sara",
-        "fullName": "Sara Mahdavi",
-        "email": "sara@gmail.com",
-        "hashedPassword": get_password_hash("1234@Sara"),
+        "userName": "sahar",
+        "fullName": "Sahar Mahdavi",
+        "email": "sahar@gmail.com",
+        "hashedPassword": get_password_hash("1234@Sahar"),
         "gender": "female",
         "createdAt": datetime.now(timezone.utc),
         "updatedAt": datetime.now(timezone.utc)
     },
     {
-        "userName": "hana",
-        "fullName": "Hana Musavi",
-        "email": "hana@gmail.com",
-        "hashedPassword": get_password_hash("1234@Hana"),
-        "gender": "female",
+        "userName": "homayun",
+        "fullName": "Homayun Musavi",
+        "email": "homayun@gmail.com",
+        "hashedPassword": get_password_hash("1234@Homayun"),
+        "gender": "male",
         "createdAt": datetime.now(timezone.utc),
         "updatedAt": datetime.now(timezone.utc)
     }
