@@ -3,11 +3,9 @@ from typing import Optional
 from app.models import Gender, ListingType
 from datetime import date, datetime
 from app.utils.error_handler import ErrorHandler
-import re
+
 
 # User
-
-
 class ICreateUserBody(BaseModel):
     userName: str
     email: str
@@ -22,7 +20,7 @@ class ICreateUserController(BaseModel):
     email: str
     hashedPassword: str
     fullName: Optional[str] = None
-    dob: Optional[str] = None
+    dob: Optional[date] = None
     gender: Optional[Gender] = None
 
 
@@ -45,7 +43,7 @@ class IUpdateUserController(BaseModel):
     email: str
     hashedPassword: str
     fullName: Optional[str] = None
-    dob: Optional[str] = None
+    dob: Optional[date] = None
     gender: Optional[Gender] = None
 
 

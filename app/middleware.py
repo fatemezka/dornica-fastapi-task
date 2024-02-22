@@ -48,8 +48,6 @@ class CustomMiddleware(BaseHTTPMiddleware):
 
     async def check_allowed_ip(self, request: Request):
         allowed_ip_list = await get_allowed_ip_list()
-        print(type(allowed_ip_list))
-        print(str(allowed_ip_list))
 
         if request.client:
             client_ip = request.client.host

@@ -60,6 +60,16 @@ class User(Base):
     # relations
     listings: Mapped[List[Listing]] = relationship(back_populates="owner")
 
-    @staticmethod
-    def parse_dob(dob_str):
-        return datetime.strptime(dob_str, "%m-%d-%Y").date()
+    @classmethod
+    async def validate_dob(cls, dob_str):
+        # Validate date format
+        try:
+            dob = datetime.strptime(dob_str, "%d-%m-%Y").date()
+        except ValueError:
+            return False, "Invalid date format. Date should be in dd-mm-YYYY format."
+
+        # Validate minimum year
+        if dob.year <= 1940:
+            return False, "Year of birth should be after 1940."
+
+        return True, dob

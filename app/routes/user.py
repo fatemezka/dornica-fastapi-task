@@ -7,6 +7,7 @@ from app.controllers.user import UserController
 from app.authentication import token_generator, get_token_info
 from app.utils.password_operator import get_password_hash
 from app.redis import store_redis_token, remove_redis_token
+from datetime import datetime
 
 
 router = APIRouter()
@@ -31,8 +32,7 @@ async def register_route(
 
     # check dob
     if (data.dob):
-        user_controller.check_dob_format(data.dob)
-        user_controller.check_dob_min_year(data.dob)
+        data.dob = await user_controller.validate_dob(dob=data.dob)
 
     # validate password characters
     user_controller.validate_password_characters(data.password)
@@ -173,8 +173,8 @@ async def update_route(
 
     # check dob
     if (data.dob):
-        user_controller.check_dob_format(data.dob)
-        user_controller.check_dob_min_year(data.dob)
+        data.dob = await user_controller.validate_dob(dob=data.dob)
+        print("CHECK 1")
 
     # TODO separate endpoint for change password
     hashed_password = current_user.hashedPassword

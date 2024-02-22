@@ -6,6 +6,7 @@ import re
 from app.utils.error_handler import ErrorHandler
 from app.utils.password_operator import verify_password
 from app.data.access_permissions import USER_SCOPES, ADMIN_SCOPES
+from datetime import datetime
 
 
 class UserController:
@@ -27,6 +28,10 @@ class UserController:
         return user
 
     async def create(self, user_items: ICreateUserController):
+        # dob_date = None
+        # if user_items["dob"] != None:
+        #     dob_date = await self.validate_dob(user_items["dob"])
+
         async with self.db as async_session:
             new_user = User(
                 userName=user_items["userName"],
@@ -164,8 +169,9 @@ class UserController:
         if existing_email and existing_email.id != user.id:
             raise ErrorHandler.bad_request(custom_message="Email is repeated.")
 
-    def check_dob_format(self, dob: str):  # should be 01-04-1987
-        pass
-
-    def check_dob_min_year(self, dob: str):
-        pass
+    async def validate_dob(self, dob: str):  # should be in this format: 01-04-1987
+        valid, dob_date = await User.validate_dob(dob)
+        if not valid:
+            raise ErrorHandler.bad_request(custom_message=dob_date)
+        dob_date = datetime.combine(dob_date, datetime.min.time())
+        return dob_date
