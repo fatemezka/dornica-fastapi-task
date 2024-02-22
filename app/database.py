@@ -1,7 +1,7 @@
 import os
-import redis
+import aioredis
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncAttrs
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncAttrs, AsyncSession
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -11,7 +11,10 @@ SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = async_sessionmaker(
-    autocommit=False, autoflush=False, bind=engine)
+    bind=engine,
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False)
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -36,9 +39,24 @@ async def get_db():
         await db.close()
 
 
-# REDIS
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = int(os.getenv("REDIS_PORT"))
+# # REDIS
+# REDIS_HOST = os.getenv("REDIS_HOST")
+# REDIS_PORT = int(os.getenv("REDIS_PORT"))
 
-redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT,
-                           db=0, decode_responses=True)
+# redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT,
+#                            db=0, decode_responses=True)
+
+
+# async def create_redis_pool():
+#     redis_pool = await aioredis.create_redis_pool((REDIS_HOST, REDIS_PORT))
+#     return redis_pool
+# try:
+#     yield redis_pool
+# finally:
+#     redis_pool.close()
+#     await redis_pool.wait_closed()
+
+
+# async def close_redis_pool(redis_pool):
+#     redis_pool.close()
+#     await redis_pool.wait_closed()

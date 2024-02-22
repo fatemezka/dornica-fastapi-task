@@ -25,3 +25,4 @@ async def initialize_fake_users():
                 async_session.add(new_user)
                 await async_session.commit()
                 await async_session.refresh(new_user)
+            await db.close()

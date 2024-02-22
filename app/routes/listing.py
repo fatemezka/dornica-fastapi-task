@@ -24,6 +24,7 @@ async def get_all_route(
 
     listing_controller = ListingController(db)
     listings = await listing_controller.get_all()
+    await db.close()
     return listings
 
 
@@ -43,12 +44,12 @@ async def get_by_id_route(
 
     listing_controller = ListingController(db)
     listing = await listing_controller.get_by_id(id)
+    await db.close()
 
     try:
         if current_user.id != listing.ownerId:
             if hasattr(listing, "ownerId"):
                 delattr(listing, "ownerId")
-
     except Exception as e:
         raise ErrorHandler.internal_server_error(e)
 
@@ -79,7 +80,7 @@ async def create_route(
             "address": data.address
         }
         listing = await listing_controller.create(listing_items=listing_items)
-        # await db.close()
+        await db.close()
     except Exception as e:
         raise ErrorHandler.internal_server_error(e)
 
@@ -115,7 +116,7 @@ async def update_route(
             "address": data.address
         }
         await listing_controller.update_by_id(id, listing_items=listing_items)
-        # await db.close()
+        await db.close()
     except Exception as e:
         raise ErrorHandler.internal_server_error(e)
 
@@ -145,7 +146,7 @@ async def delete_route(
     try:
         # delete listing
         await listing_controller.delete(id)
-        # await db.close()
+        await db.close()
     except Exception as e:
         raise ErrorHandler.internal_server_error(e)
 

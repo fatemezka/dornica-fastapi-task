@@ -1,11 +1,10 @@
 from fastapi import Request, Response
 from datetime import datetime
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.database import redis_client
 from datetime import datetime
 from app.utils.error_handler import ErrorHandler
 from app.authentication import token_encoder
-from app.utils.redis_operator import get_redis_value, increase_redis_request_ip
+from app.redis import get_redis_value, increase_redis_request_ip, get_allowed_ip_list
 from app.models import User
 from app.database import SessionLocal
 from sqlalchemy import select
@@ -14,11 +13,11 @@ from sqlalchemy import select
 class CustomMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # check ip
-        self.check_allowed_ip(request)
+        await self.check_allowed_ip(request)
 
         # check request count per minute
         if request.method == "POST" and request.url.path == "/user/token":
-            self.check_request_attempts(request)
+            await self.check_request_attempts(request)
 
         # validate token from redis
         await self.validate_token(request)
@@ -47,17 +46,20 @@ class CustomMiddleware(BaseHTTPMiddleware):
         with open("request_logger.log", 'a') as log_file:
             log_file.write(request_data)
 
-    def check_allowed_ip(self, request: Request):
-        allowed_ip_list = redis_client.lrange("allowed_ip_list", 0, -1) or []
+    async def check_allowed_ip(self, request: Request):
+        allowed_ip_list = await get_allowed_ip_list()
+        print(type(allowed_ip_list))
+        print(str(allowed_ip_list))
 
         if request.client:
             client_ip = request.client.host
         else:
             client_ip = "N/A"  # for unit-testing
 
-        if client_ip != "N/A" and client_ip not in allowed_ip_list:
+        if client_ip != "N/A" and client_ip not in await get_allowed_ip_list():
+            # TODO fix raise error
             raise ErrorHandler.access_denied(
-                "url (based on your blocked IP) - check allowed IPs")  # TODO fix raise error
+                "url (based on your blocked IP) - check allowed IPs")
 
     async def validate_token(self, request: Request):
         if "auth-token" not in request.headers:
@@ -70,13 +72,13 @@ class CustomMiddleware(BaseHTTPMiddleware):
 
         current_user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
 
-        existing_redis_token = get_redis_value(key=current_user.email)
+        existing_redis_token = await get_redis_value(key=current_user.email)
         if not existing_redis_token:
             raise ErrorHandler.user_unauthorized(
                 message="Your token is expired. Please try to login again.")  # TODO fix raise error
 
-    def check_request_attempts(self, request: Request):
+    async def check_request_attempts(self, request: Request):
         if not request.client:
             return
         client_ip = request.client.host
-        increase_redis_request_ip(client_ip)  # TODO fix raise error
+        await increase_redis_request_ip(client_ip)  # TODO fix raise error

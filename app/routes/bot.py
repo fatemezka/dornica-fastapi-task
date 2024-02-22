@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from app.utils.weatherapi_receiver import main
-from app.database import redis_client
 
 router = APIRouter()
 

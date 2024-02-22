@@ -6,7 +6,7 @@ from app.utils.error_handler import ErrorHandler
 from app.controllers.user import UserController
 from app.authentication import token_generator, get_token_info
 from app.utils.password_operator import get_password_hash
-from app.utils.redis_operator import store_redis_token, remove_redis_token
+from app.redis import store_redis_token, remove_redis_token
 
 
 router = APIRouter()
@@ -51,14 +51,14 @@ async def register_route(
             "gender": data.gender or None
         }
         user = await user_controller.create(user_items=user_items)
-        # await db.close()
+        await db.close()
 
         # generate jwt token
         user_token = token_generator(
             user_id=user.id, scope="user")  # or admin
 
         # store user token in redis
-        store_redis_token(user=user, token=user_token)
+        await store_redis_token(user=user, token=user_token)
     except Exception as e:
         raise ErrorHandler.internal_server_error(e)
 
@@ -82,7 +82,7 @@ async def login_route(
     # verify password
     await user_controller.verify_password(data.userName, data.password)
 
-    # await db.close()
+    await db.close()
 
     try:
         # generate jwt token
@@ -90,8 +90,8 @@ async def login_route(
         token = token_generator(user_id=user.id, scope="user")  # or admin
 
         # store user token in redis
-        remove_redis_token(user=user)
-        store_redis_token(user=user, token=token)
+        await remove_redis_token(user=user)
+        await store_redis_token(user=user, token=token)
 
     except Exception as e:
         raise ErrorHandler.internal_server_error(e)
@@ -113,9 +113,10 @@ async def logout_route(
 
     # check scope
     user_controller.validate_scope(scope=scope, operation="logout_own_user")
+    await db.close()
 
     try:
-        remove_redis_token(user=current_user)
+        await remove_redis_token(user=current_user)
     except Exception as e:
         raise ErrorHandler.internal_server_error(e)
 
@@ -134,6 +135,7 @@ async def get_info_route(
 
     # check scope
     user_controller.validate_scope(scope=scope, operation="get_own_user")
+    await db.close()
 
     return current_user
 
@@ -192,7 +194,7 @@ async def update_route(
             "gender": data.gender or None
         }
         await user_controller.update_by_id(id, user_items=user_items)
-        # await db.close()
+        await db.close()
 
     except Exception as e:
         raise ErrorHandler.internal_server_error(e)

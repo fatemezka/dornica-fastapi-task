@@ -50,6 +50,7 @@ async def initial_user_table():
         async_session.add(new_user)
         await async_session.commit()
         await async_session.refresh(new_user)
+    await db.close()
 
 
 async def initial_listing_table():
@@ -67,6 +68,7 @@ async def initial_listing_table():
         async_session.add(new_listing)
         await async_session.commit()
         await async_session.refresh(new_listing)
+    await db.close()
 
 
 @pytest.fixture(scope="session", autouse=True)
