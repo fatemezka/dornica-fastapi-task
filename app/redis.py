@@ -7,7 +7,6 @@ REDIS_PORT = int(os.getenv("REDIS_PORT"))
 
 
 async def create_redis_pool():
-    # redis_pool = await aioredis.create_redis_pool((REDIS_HOST, REDIS_PORT))
     redis_pool = await aioredis.from_url(
         "redis://localhost", encoding="utf-8", decode_responses=True)
     return redis_pool
@@ -17,12 +16,6 @@ async def get_allowed_ip_list():
     redis_pool = await create_redis_pool()
     allowed_ip_list = await redis_pool.lrange("allowed_ip_list", 0, -1) or []
     return allowed_ip_list
-    # arr = []
-    # item = None
-    # while not item:
-    #     item = redis_pool.lpop("allowed_ip_list")
-    #     arr.append(item)
-    # return arr
 
 
 async def increase_redis_request_ip(ip):

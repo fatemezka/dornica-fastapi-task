@@ -37,26 +37,3 @@ async def get_db():
         yield db
     finally:
         await db.close()
-
-
-# # REDIS
-# REDIS_HOST = os.getenv("REDIS_HOST")
-# REDIS_PORT = int(os.getenv("REDIS_PORT"))
-
-# redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT,
-#                            db=0, decode_responses=True)
-
-
-# async def create_redis_pool():
-#     redis_pool = await aioredis.create_redis_pool((REDIS_HOST, REDIS_PORT))
-#     return redis_pool
-# try:
-#     yield redis_pool
-# finally:
-#     redis_pool.close()
-#     await redis_pool.wait_closed()
-
-
-# async def close_redis_pool(redis_pool):
-#     redis_pool.close()
-#     await redis_pool.wait_closed()
