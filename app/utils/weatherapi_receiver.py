@@ -1,4 +1,3 @@
-from geopy.geocoders import Nominatim
 import requests
 import csv
 import os
@@ -7,50 +6,48 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
 
+API_KEY = os.getenv("WEATHERAPI_API_KEY")
 WEATHERAPI_API_URL = os.getenv("WEATHERAPI_API_URL")
-WEATHERAPI_API_KEY = os.getenv("WEATHERAPI_API_KEY")
-CURRENT_CITY_NAME = "Sari"
+url = f"{WEATHERAPI_API_URL}/forecast.json?key={API_KEY}&q=sari&dt="
 
 
-def get_weather_data(date):
-    params = {
-        'key': WEATHERAPI_API_KEY,
-        'q': 'London',  # Replace 'CityName' with the name of the city you want weather data for
-        'dt': date.strftime('%Y-%m-%d')
-    }
-    response = requests.get(WEATHERAPI_API_URL, params=params)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print('Failed to fetch data for', date.strftime('%Y-%m-%d'))
-        return None
+# Function to fetch weather data for a specific date
+def fetch_weather_data(date):
+    response = requests.get(url + date)
+    data = response.json()
+    return data
 
 
-def save_to_csv(data, filename):
-    with open(filename, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(
-            ['Date', 'Max Temp (C)', 'Min Temp (C)', 'Condition'])  # Header row
-        for day_data in data['forecast']['forecastday']:
-            date = day_data['date']
-            max_temp = day_data['day']['maxtemp_c']
-            min_temp = day_data['day']['mintemp_c']
-            condition = day_data['day']['condition']['text']
-            writer.writerow([date, max_temp, min_temp, condition])
+# Function to save weather data to time.csv
+def save_to_csv(data):
+    with open('time.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Date', 'Max Temp (C)', 'Min Temp (C)',
+                        'Avg Temp (C)', 'Max Wind (km/h)', 'Total Precipitation (mm)'])
+        for date, info in data.items():
+            if 'error' in info:
+                print(f"Error for date {date}: {info['error']['message']}")
+            else:
+                writer.writerow([date, info['forecast']['forecastday'][0]['day']['maxtemp_c'], info['forecast']['forecastday'][0]['day']['mintemp_c'], info['forecast']
+                                ['forecastday'][0]['day']['avgtemp_c'], info['forecast']['forecastday'][0]['day']['maxwind_kph'], info['forecast']['forecastday'][0]['day']['totalprecip_mm']])
+
+
+# Function to generate date strings for the next 10 days
+def generate_dates():
+    current_date = datetime.now()
+    end_date = current_date + timedelta(days=10)
+    dates = []
+    while current_date < end_date:
+        dates.append(current_date.strftime('%Y-%m-%d'))
+        current_date += timedelta(days=1)
+    return dates
 
 
 def main():
-    start_date = datetime.now()
+    dates = generate_dates()
+    weather_data = {}
 
-    end_date = start_date + timedelta(days=90)
+    for date in dates:
+        weather_data[date] = fetch_weather_data(date)
 
-    all_weather_data = []
-
-    current_date = start_date
-    while current_date <= end_date:
-        weather_data = get_weather_data(current_date)
-        if weather_data:
-            all_weather_data.append(weather_data)
-        current_date += timedelta(days=1)
-
-    save_to_csv(all_weather_data, 'time.csv')
+    save_to_csv(weather_data)
