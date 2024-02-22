@@ -46,12 +46,9 @@ async def get_by_id_route(
     listing = await listing_controller.get_by_id(id)
     await db.close()
 
-    try:
-        if current_user.id != listing.ownerId:
-            if hasattr(listing, "ownerId"):
-                delattr(listing, "ownerId")
-    except Exception as e:
-        raise ErrorHandler.internal_server_error(e)
+    if current_user.id != listing.ownerId:
+        if hasattr(listing, "ownerId"):
+            delattr(listing, "ownerId")
 
     return listing
 
@@ -71,18 +68,16 @@ async def create_route(
     user_controller.validate_scope(scope=scope, operation="create_listing")
 
     listing_controller = ListingController(db)
-    try:
-        # create a new listing
-        listing_items = {
-            "type": data.type,
-            "availableNow": data.availableNow,
-            "ownerId": current_user.id,
-            "address": data.address
-        }
-        listing = await listing_controller.create(listing_items=listing_items)
-        await db.close()
-    except Exception as e:
-        raise ErrorHandler.internal_server_error(e)
+
+    # create a new listing
+    listing_items = {
+        "type": data.type,
+        "availableNow": data.availableNow,
+        "ownerId": current_user.id,
+        "address": data.address
+    }
+    listing = await listing_controller.create(listing_items=listing_items)
+    await db.close()
 
     return listing
 
@@ -108,17 +103,14 @@ async def update_route(
     await listing_controller.check_user_is_owner(
         user_id=current_user.id, listing_id=id)
 
-    try:
-        # update listing
-        listing_items = {
-            "type": data.type,
-            "availableNow": data.availableNow,
-            "address": data.address
-        }
-        await listing_controller.update_by_id(id, listing_items=listing_items)
-        await db.close()
-    except Exception as e:
-        raise ErrorHandler.internal_server_error(e)
+    # update listing
+    listing_items = {
+        "type": data.type,
+        "availableNow": data.availableNow,
+        "address": data.address
+    }
+    await listing_controller.update_by_id(id, listing_items=listing_items)
+    await db.close()
 
     return {"message": "Listing updated successfully"}
 
@@ -143,11 +135,8 @@ async def delete_route(
     await listing_controller.check_user_is_owner(
         user_id=current_user.id, listing_id=id)
 
-    try:
-        # delete listing
-        await listing_controller.delete(id)
-        await db.close()
-    except Exception as e:
-        raise ErrorHandler.internal_server_error(e)
+    # delete listing
+    await listing_controller.delete(id)
+    await db.close()
 
     return {"message": "Listing deleted successfully"}

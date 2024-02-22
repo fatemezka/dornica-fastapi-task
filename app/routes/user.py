@@ -37,30 +37,27 @@ async def register_route(
     # validate password characters
     user_controller.validate_password_characters(data.password)
 
-    try:
-        # hash user's password
-        hashed_password = get_password_hash(data.password)
+    # hash user's password
+    hashed_password = get_password_hash(data.password)
 
-        # create a new user
-        user_items = {
-            "userName": data.userName,
-            "email": data.email,
-            "hashedPassword": hashed_password,
-            "fullName": data.fullName or None,
-            "dob": data.dob or None,
-            "gender": data.gender or None
-        }
-        user = await user_controller.create(user_items=user_items)
-        await db.close()
+    # create a new user
+    user_items = {
+        "userName": data.userName,
+        "email": data.email,
+        "hashedPassword": hashed_password,
+        "fullName": data.fullName or None,
+        "dob": data.dob or None,
+        "gender": data.gender or None
+    }
+    user = await user_controller.create(user_items=user_items)
+    await db.close()
 
-        # generate jwt token
-        user_token = token_generator(
-            user_id=user.id, scope="user")  # or admin
+    # generate jwt token
+    user_token = token_generator(
+        user_id=user.id, scope="user")  # or admin
 
-        # store user token in redis
-        await store_redis_token(user=user, token=user_token)
-    except Exception as e:
-        raise ErrorHandler.internal_server_error(e)
+    # store user token in redis
+    await store_redis_token(user=user, token=user_token)
 
     return {
         "user": user,
@@ -84,17 +81,13 @@ async def login_route(
 
     await db.close()
 
-    try:
-        # generate jwt token
-        user = await user_controller.get_by_username(data.userName)
-        token = token_generator(user_id=user.id, scope="user")  # or admin
+    # generate jwt token
+    user = await user_controller.get_by_username(data.userName)
+    token = token_generator(user_id=user.id, scope="user")  # or admin
 
-        # store user token in redis
-        await remove_redis_token(user=user)
-        await store_redis_token(user=user, token=token)
-
-    except Exception as e:
-        raise ErrorHandler.internal_server_error(e)
+    # store user token in redis
+    await remove_redis_token(user=user)
+    await store_redis_token(user=user, token=token)
 
     return {
         "user": user,
@@ -115,10 +108,7 @@ async def logout_route(
     user_controller.validate_scope(scope=scope, operation="logout_own_user")
     await db.close()
 
-    try:
-        await remove_redis_token(user=current_user)
-    except Exception as e:
-        raise ErrorHandler.internal_server_error(e)
+    await remove_redis_token(user=current_user)
 
     return {"message": "User logged out successfully"}
 
@@ -183,20 +173,16 @@ async def update_route(
         user_controller.validate_password_characters(data.password)
         hashed_password = get_password_hash(data.password)
 
-    try:
-        # update user
-        user_items = {
-            "userName": data.userName,
-            "email": data.email,
-            "hashedPassword": hashed_password,
-            "fullName": data.fullName or None,
-            "dob": data.dob or None,
-            "gender": data.gender or None
-        }
-        await user_controller.update_by_id(id, user_items=user_items)
-        await db.close()
-
-    except Exception as e:
-        raise ErrorHandler.internal_server_error(e)
+    # update user
+    user_items = {
+        "userName": data.userName,
+        "email": data.email,
+        "hashedPassword": hashed_password,
+        "fullName": data.fullName or None,
+        "dob": data.dob or None,
+        "gender": data.gender or None
+    }
+    await user_controller.update_by_id(id, user_items=user_items)
+    await db.close()
 
     return {"message": "User updated successfully"}
