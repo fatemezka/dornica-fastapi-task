@@ -10,8 +10,10 @@ from app.routes.listing import router as listing_router
 from app.routes.bot import router as bot_router
 
 
-app = FastAPI()
-
+app = FastAPI(
+    title="Dornica Fastapi Task",
+    description="This is a Dornica tastapi task sample description"
+)
 
 # Logging
 logging.basicConfig(filename='errors.log', level=logging.ERROR)
