@@ -11,7 +11,7 @@ class ListingController:
         self.db = db
 
     async def get_all(self):
-        listings = (await self.db.execute(select(Listing))).scalars().all()
+        listings = (await self.db.execute(select(Listing).options(defer(Listing.ownerId)))).scalars().all()
         return listings
 
     async def get_by_owner_id(self, owner_id: int):
